@@ -54,8 +54,13 @@ import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.subsystems.CANdleSystem;
 import frc.robot.commands.CANdleConfigCommands;
 import frc.robot.commands.CANdlePrintCommands;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -66,9 +71,11 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final XboxController joy = new XboxController(Constants.JoystickId);
-  
-  private final CANdleSystem m_candleSubsystem = new CANdleSystem(joy);
+  CommandJoystick jsLightController = new CommandJoystick(Constants.JoystickId);
 
+  private final CANdleSystem m_candleSubsystem = new CANdleSystem(joy);
+  private final CANdleConfigCommands m_CaNdleConfigCommands = new CANdleConfigCommands();
+  
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the button bindings
@@ -82,21 +89,37 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    new JoystickButton(joy, Constants.BlockButton).whenPressed(m_candleSubsystem::setColors, m_candleSubsystem);
-    new JoystickButton(joy, Constants.IncrementAnimButton).whenPressed(m_candleSubsystem::incrementAnimation, m_candleSubsystem);
-    new JoystickButton(joy, Constants.DecrementAnimButton).whenPressed(m_candleSubsystem::decrementAnimation, m_candleSubsystem);
+    // Original Code
+    // new JoystickButton(joy, Constants.BlockButton).whenPressed(m_candleSubsystem::setColors, m_candleSubsystem);
+    
+    /*New syntax for binding buttons
+    final JoystickButton r1 = new JoystickButton(joy, Constants.BlockButton);
+    r1.onTrue(new CANdleConfigCommands().withInterruptBehavior(InterruptionBehavior.kCancelSelf));
+    new Trigger(m_candleSubsystem::setColors)
+        .onTrue(new CANdleConfigCommands());
+    */
+    jsLightController.button(Constants.BlockButton).onTrue(new InstantCommand(m_candleSubsystem::setColors, m_candleSubsystem));
+    jsLightController.button(Constants.IncrementAnimButton).onTrue(new InstantCommand(m_candleSubsystem::incrementAnimation, m_candleSubsystem));
+    jsLightController.button(Constants.DecrementAnimButton).onTrue(new InstantCommand(m_candleSubsystem::decrementAnimation, m_candleSubsystem));
+    
+   // Command = 
+    //jsLightController.button(Constants.MaxBrightnessAngle).toggleOnTrue(m_candleSubsystem, "command", "toggleOnRising");           
+    //(m_candleSubsystem, 1.0);
+  
+    //jsLightController.button(Constants.ChangeDirectionAngle).onTrue(new InstantCommand(m_candleSubsystem::configBrightness, m_candleSubsystem));
+    
+   // new POVButton(joy, Constants.MidBrightnessAngle).whenPressed(new CANdleConfigCommands.ConfigBrightness(m_candleSubsystem, 0.3));
+   // new POVButton(joy, Constants.ZeroBrightnessAngle).whenPressed(new CANdleConfigCommands.ConfigBrightness(m_candleSubsystem, 0));
+    
+   // jsLightController.button(9).onTrue(new Command(m_candleSubsystem.clearAllAnims(), m_candleSubsystem));
+   
+   // new JoystickButton(joy, 10).whenPressed(()->m_candleSubsystem.toggle5VOverride(), m_candleSubsystem);
+  /* 
+    jsLightController.button(Constants.VbatButton).onTrue(new InstantCommand(CANdlePrintCommands.PrintVBat(m_candleSubsystem)));
 
-    new POVButton(joy, Constants.MaxBrightnessAngle).whenPressed(new CANdleConfigCommands.ConfigBrightness(m_candleSubsystem, 1.0));
-    new POVButton(joy, Constants.MidBrightnessAngle).whenPressed(new CANdleConfigCommands.ConfigBrightness(m_candleSubsystem, 0.3));
-    new POVButton(joy, Constants.ZeroBrightnessAngle).whenPressed(new CANdleConfigCommands.ConfigBrightness(m_candleSubsystem, 0));
-    new POVButton(joy, Constants.ChangeDirectionAngle).whenPressed(()->m_candleSubsystem.toggleAnimDirection(), m_candleSubsystem);
-
-    new JoystickButton(joy, 9).whenPressed(()->m_candleSubsystem.clearAllAnims(), m_candleSubsystem);
-    new JoystickButton(joy, 10).whenPressed(()->m_candleSubsystem.toggle5VOverride(), m_candleSubsystem);
-
-    new JoystickButton(joy, Constants.VbatButton).whenPressed(new CANdlePrintCommands.PrintVBat(m_candleSubsystem));
     new JoystickButton(joy, Constants.V5Button).whenPressed(new CANdlePrintCommands.Print5V(m_candleSubsystem));
     new JoystickButton(joy, Constants.CurrentButton).whenPressed(new CANdlePrintCommands.PrintCurrent(m_candleSubsystem));
     new JoystickButton(joy, Constants.TemperatureButton).whenPressed(new CANdlePrintCommands.PrintTemperature(m_candleSubsystem));
+    */
   }
 }
